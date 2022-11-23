@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { ImageGalleryItem } from './ImageGalleryItem/ImageGalleryItem';
 import { Button } from 'components/Button/Button';
@@ -21,42 +21,42 @@ export const ImageGalery = ({ inputValue }) => {
     });
   };
 
-  const getImages = useCallback(() => {
-    fetch(
-      `${BASE_URL}q=${inputValue}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`
-    )
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        }
-        return Promise.reject(
-          new Error(`Something wrong with this request ${inputValue}`)
-        );
-      })
-      .then(({ hits }) => {
-        const imagesList = hits.map(
-          ({ id, webformatURL, largeImageURL, tags }) => {
-            return {
-              id,
-              webformatURL,
-              largeImageURL,
-              tags,
-            };
-          }
-        );
-        return imagesList;
-      })
-      .then(imagesList => {
-        setImages(prevImages => [...prevImages, ...imagesList]);
-        setStatus('resolved');
-      })
-      .catch(error => {
-        setError(error.message);
-        setStatus('rejected');
-      });
-  }, [inputValue, page]);
-
   useEffect(() => {
+    const getImages = () => {
+      fetch(
+        `${BASE_URL}q=${inputValue}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`
+      )
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          }
+          return Promise.reject(
+            new Error(`Something wrong with this request ${inputValue}`)
+          );
+        })
+        .then(({ hits }) => {
+          const imagesList = hits.map(
+            ({ id, webformatURL, largeImageURL, tags }) => {
+              return {
+                id,
+                webformatURL,
+                largeImageURL,
+                tags,
+              };
+            }
+          );
+          return imagesList;
+        })
+        .then(imagesList => {
+          setImages(prevImages => [...prevImages, ...imagesList]);
+          setStatus('resolved');
+        })
+        .catch(error => {
+          setError(error.message);
+          setStatus('rejected');
+        });
+    };
+
     if (inputValue.trim() === '') {
       return;
     }
@@ -68,14 +68,12 @@ export const ImageGalery = ({ inputValue }) => {
       getImages();
       return;
     }
-  }, [inputValue]);
 
-  useEffect(() => {
     if (page > 1) {
       getImages();
       return;
     }
-  }, [page]);
+  }, [inputValue, page]);
 
   if (status === 'pending') {
     return <Loader />;

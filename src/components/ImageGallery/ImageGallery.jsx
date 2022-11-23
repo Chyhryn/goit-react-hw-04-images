@@ -14,6 +14,7 @@ export const ImageGalery = ({ inputValue }) => {
   const [images, setImages] = useState([]);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState(null);
+  const [query, setQuery] = useState('');
 
   const onClickHandler = () => {
     setPage(prevPage => {
@@ -22,19 +23,34 @@ export const ImageGalery = ({ inputValue }) => {
   };
 
   useEffect(() => {
+    if (inputValue.trim() === '') {
+      return;
+    }
+    setQuery(inputValue);
+    setPage(1);
+    setImages([]);
+    setStatus('pending');
+  }, [inputValue]);
+
+  useEffect(() => {
     const getImages = () => {
       fetch(
-        `${BASE_URL}q=${inputValue}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`
+        `${BASE_URL}q=${query}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`
       )
         .then(response => {
           if (response.ok) {
             return response.json();
           }
           return Promise.reject(
-            new Error(`Something wrong with this request ${inputValue}`)
+            new Error(`Something wrong with this request ${query}`)
           );
         })
         .then(({ hits }) => {
+          if (hits.length === 0) {
+            return Promise.reject(
+              new Error(`There is no images for this query ${query}!`)
+            );
+          }
           const imagesList = hits.map(
             ({ id, webformatURL, largeImageURL, tags }) => {
               return {
@@ -57,29 +73,14 @@ export const ImageGalery = ({ inputValue }) => {
         });
     };
 
-    if (inputValue.trim() === '') {
-      return;
-    }
-
-    if (inputValue !== '') {
-      setImages([]);
-      setStatus('pending');
-      setPage(1);
-      getImages();
-      return;
-    }
-
-    if (page > 1) {
-      getImages();
-      return;
-    }
-  }, [inputValue, page]);
+    getImages();
+  }, [query, page]);
 
   if (status === 'pending') {
     return <Loader />;
   }
   if (status === 'rejected') {
-    return <div>{error.message}</div>;
+    return <div className={css.Error}>{error}</div>;
   }
   if (status === 'resolved') {
     return (

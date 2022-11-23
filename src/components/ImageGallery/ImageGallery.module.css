@@ -10,3 +10,8 @@
   margin-left: auto;
   margin-right: auto;
 }
+
+.Error {
+  text-align: center;
+  font-weight: 700;
+}

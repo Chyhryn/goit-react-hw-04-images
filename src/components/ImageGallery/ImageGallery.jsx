@@ -33,6 +33,9 @@ export const ImageGalery = ({ inputValue }) => {
   }, [inputValue]);
 
   useEffect(() => {
+    if (query === '') {
+      return;
+    }
     const getImages = () => {
       fetch(
         `${BASE_URL}q=${query}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`
